@@ -66,5 +66,5 @@ if __name__ == "__main__":
     sleep_time = random.randint(0, 60 * 5)
     print(f"sleep {sleep_time}s")
     time.sleep(sleep_time)
-    result = ZhenBaiMeng(check_items=cfg["cookie"]).main()
+    result = ZhenBaiMeng(cfg["cookie"]).main()
     print("真白萌", result)
