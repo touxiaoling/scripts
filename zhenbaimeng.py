@@ -62,9 +62,11 @@ class ZhenBaiMeng:
 
 if __name__ == "__main__":
     cfg = load_config()
+    debug = cfg.get("debug", False)
     cfg = cfg.get("zhenbaimeng", [])
-    sleep_time = random.randint(0, 60 * 5)
-    print(f"sleep {sleep_time}s")
-    time.sleep(sleep_time)
+    if not debug:
+        sleep_time = random.randint(0, 60 * 5)
+        print(f"sleep {sleep_time}s")
+        time.sleep(sleep_time)
     result = ZhenBaiMeng(cfg["cookie"]).main()
     print("真白萌", result)
