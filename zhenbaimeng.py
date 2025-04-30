@@ -24,7 +24,7 @@ class ZhenBaiMeng:
         self.url = "https://masiro.me/admin/dailySignIn"
 
     def sign(self, session: httpx.Client):
-        res = session.get(self.url, verify=False).json()
+        res = session.get(self.url).json()
         if res["code"] == 1:
             msg = res["msg"]
         elif res["code"] == -1:
