@@ -62,8 +62,8 @@ class ZhenBaiMeng:
 
 if __name__ == "__main__":
     cfg = load_config()
+
     debug = cfg.get("debug", False)
-    cfg = cfg.get("zhenbaimeng", [])
     if not debug:
         sleep_time = random.randint(0, 60 * 5)
         print(f"sleep {sleep_time}s")
