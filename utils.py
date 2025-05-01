@@ -2,6 +2,7 @@ import tomllib
 from pathlib import Path
 import functools
 import asyncio
+import inspect
 import sys
 import time
 import logging
@@ -56,7 +57,7 @@ def retry(retry_time=3, delay=1, catch_exceptions=(Exception,)):
             if last_exception:
                 raise last_exception
 
-        if asyncio.iscoroutinefunction(f):
+        if inspect.iscoroutinefunction(f):
             return async_wrapper
         else:
             return sync_wrapper
