@@ -150,6 +150,8 @@ async def main():
     zoom_level = cfg["zoom_level"]
     save_path = Path(cfg["save_path"])
 
+    save_path.mkdir(exist_ok=True)
+
     latest_dt = await get_latest_fragments_info()
     dt = latest_dt - timedelta(hours=24)
     async with asyncio.TaskGroup() as tg:
@@ -165,6 +167,6 @@ if __name__ == "__main__":
     logging.basicConfig(format=FORMAT, level=logging.INFO, stream=sys.stderr)
     logging.getLogger("httpx").setLevel(logging.WARN)
 
-    asyncio.run(main(),debug=True)
+    asyncio.run(main(), debug=cfg["debug"])
 
 # */10 * * * *
