@@ -2,6 +2,7 @@ config.toml
 /db
 /himawari8
 .DS_Store
+*_try.*
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

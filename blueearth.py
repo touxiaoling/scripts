@@ -54,19 +54,9 @@ async def download_img(zoom_level, dt, col, row):
     return col, row, response
 
 
-async def turncated_img(zoom_level, format_dt, file_path: Path):
-    _logger.debug(f"Truncated image detected for {zoom_level}_{format_dt}. Reinitializing fragments.")
-    file_path.unlink(missing_ok=True)
-
-    for col in range(zoom_level):
-        for row in range(zoom_level):
-            db[f"{zoom_level}_{format_dt}_{col}_{row}"] = False
-    db[f"{zoom_level}_{format_dt}"] = False
-
-
 async def get_fragments(dt: datetime, zoom_level):
     tasks = []
-    format_dt = dt.strftime("%y%m%d_%H%M")
+    format_dt = dt.strftime("%d_%H%M")
 
     for col in range(zoom_level):
         for row in range(zoom_level):
@@ -80,6 +70,9 @@ async def get_fragments(dt: datetime, zoom_level):
         db[f"{zoom_level}_{format_dt}"] = True
         return
 
+    if not cfg["tqdm"]:
+        tqdm = lambda *args, **kwargs: args[0]
+
     for task in tqdm(asyncio.as_completed(tasks), total=total_num, desc=f"Downloading {zoom_level}_{format_dt}"):
         col, row, img_bytes = await task
         if img_bytes:
@@ -92,21 +85,45 @@ async def get_fragments(dt: datetime, zoom_level):
             yield col, row, img_bytes
 
 
+async def get_coastline(zoom_level, save_path: Path, tg: asyncio.TaskGroup):
+    png_unit_size = cfg["png_unit_size"]
+    png_width = png_unit_size * zoom_level
+    png_height = png_width
+    file_path = save_path / f"coastline_{zoom_level:02d}.webp"
+
+
+async def turncated_img(zoom_level, format_dt, file_path: Path):
+    _logger.debug(f"Truncated image detected for {zoom_level}_{format_dt}. Reinitializing fragments.")
+    file_path.unlink(missing_ok=True)
+
+    for col in range(zoom_level):
+        for row in range(zoom_level):
+            db[f"{zoom_level}_{format_dt}_{col}_{row}"] = False
+    db[f"{zoom_level}_{format_dt}"] = False
+
+
 @utils.limit_async(2)
 async def stitching(dt: datetime, zoom_level, save_path: Path, tg: asyncio.TaskGroup):
     png_unit_size = cfg["png_unit_size"]
     png_width = png_unit_size * zoom_level
     png_height = png_width
-    format_dt = dt.strftime("%y%m%d_%H%M")
-    file_path = save_path / f"earth_{zoom_level}_{format_dt}.webp"
+    dir_dt = dt.strftime("%Y%m")
+
+    save_dir = save_path / f"{zoom_level:02d}_{dir_dt}"
+    save_dir.mkdir(exist_ok=True)
+
+    format_dt = dt.strftime("%d_%H%M")
+    file_path = save_dir / f"{format_dt}.webp"
 
     if not file_path.exists():
+        _logger.debug(f"checking image not exists {file_path}...")
         await turncated_img(zoom_level, format_dt, file_path)
 
     if db.get(f"{zoom_level}_{format_dt}", False):
         return
 
     if not file_path.exists():
+        _logger.debug(f"Creating new image {zoom_level}_{format_dt}...")
         target = await asyncio.to_thread(Image.new, "RGB", (png_width, png_height), "black")
     else:
         try:
@@ -115,15 +132,17 @@ async def stitching(dt: datetime, zoom_level, save_path: Path, tg: asyncio.TaskG
             _logger.error(f"Error opening existing image: {e}")
             await turncated_img(zoom_level, format_dt, file_path)
 
-    _logger.debug(f"Stitching image {zoom_level}_{format_dt}...")
+    _logger.info(f"Stitching image {zoom_level}_{format_dt}...")
     async for col, row, img_bytes in get_fragments(dt, zoom_level):
         with Image.open(img_bytes) as img:
             await asyncio.to_thread(target.paste, img, (col * png_unit_size, row * png_unit_size))
 
     async def tail_process():
         try:
+            _logger.info(f"Saving stitched image {file_path}...")
             await asyncio.to_thread(target.save, file_path, "WEBP", lossless=True, optimize=True, quality=90, method=6)
             target.close()
+            _logger.info(f"Image saved successfully: {file_path}")
         except Exception as e:
             _logger.error(f"Error saving image {file_path}: {e}")
             await turncated_img(zoom_level, format_dt, file_path)
@@ -167,6 +186,6 @@ if __name__ == "__main__":
     logging.basicConfig(format=FORMAT, level=logging.INFO, stream=sys.stderr)
     logging.getLogger("httpx").setLevel(logging.WARN)
 
-    asyncio.run(main(), debug=cfg["debug"])
+    asyncio.run(main())
 
 # */10 * * * *

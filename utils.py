@@ -39,7 +39,7 @@ def retry(retry_time=3, delay=1, catch_exceptions=(Exception,)):
                 try:
                     return await f(*args, **kwargs)
                 except catch_exceptions as e:
-                    _logger.warning(f"Attempt {f.__name__} {i+1} failed with error: {e}")
+                    _logger.warning(f"Attempt {f.__name__} {i + 1} failed with error: {e}")
                     last_exception = e
                     await asyncio.sleep(delay)
             if last_exception:
@@ -51,7 +51,7 @@ def retry(retry_time=3, delay=1, catch_exceptions=(Exception,)):
                 try:
                     return f(*args, **kwargs)
                 except catch_exceptions as e:
-                    _logger.warning(f"Attempt {f.__name__} {i+1} failed with error: {e}")
+                    _logger.warning(f"Attempt {f.__name__} {i + 1} failed with error: {e}")
                     last_exception = e
                     time.sleep(delay)  # sleep synchronously
             if last_exception:

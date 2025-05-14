@@ -35,10 +35,7 @@ class ZhenBaiMeng:
 
     def main(self):
         msg_all = ""
-        cookie = {
-            item.split("=", 1)[0]: item.split("=", 1)[1]
-            for item in self.cookies.split("; ")
-        }
+        cookie = {item.split("=", 1)[0]: item.split("=", 1)[1] for item in self.cookies.split("; ")}
 
         session = httpx.Client()
 
