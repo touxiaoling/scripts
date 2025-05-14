@@ -70,7 +70,7 @@ async def get_fragments(dt: datetime, zoom_level):
         db[f"{zoom_level}_{format_dt}"] = True
         return
 
-    if not cfg["tqdm"]:
+    if not cfg.get("tqdm",False):
         tqdm = lambda *args, **kwargs: args[0]
 
     for task in tqdm(asyncio.as_completed(tasks), total=total_num, desc=f"Downloading {zoom_level}_{format_dt}"):
