@@ -1,5 +1,7 @@
+from datetime import datetime
+
 def main():
-    print("Hello from scripts!")
+    print(f"{datetime.now()}: Hello from scripts!")
 
 
 if __name__ == "__main__":
