@@ -70,7 +70,7 @@ async def get_fragments(dt: datetime, zoom_level):
         db[f"{zoom_level}_{format_dt}"] = True
         return
 
-    if not cfg.get("tqdm",False):
+    if not cfg.get("tqdm", False):
         tqdm = lambda *args, **kwargs: args[0]
 
     for task in tqdm(asyncio.as_completed(tasks), total=total_num, desc=f"Downloading {zoom_level}_{format_dt}"):
@@ -164,12 +164,26 @@ async def get_latest_fragments_info():
 
     return dt
 
+async def old_version_merge(save_path: Path):
+    for file in save_path.glob("*.webp"):
+        if file.name.startswith("coastline"):
+            continue
+        #earth_16_250430_1340
+        file_name = file.stem
+        p1 = file_name[6:9]+"20"+file_name[9:13]
+        p2 = file_name[13:]+".webp"
+        new_file_path = save_path/p1/p2
+        new_file_path.parent.mkdir(exist_ok=True)
+        print(new_file_path)
+        file.rename(new_file_path)
 
 async def main():
     zoom_level = cfg["zoom_level"]
     save_path = Path(cfg["save_path"])
 
     save_path.mkdir(exist_ok=True)
+
+    await old_version_merge(save_path)
 
     latest_dt = await get_latest_fragments_info()
     dt = latest_dt - timedelta(hours=24)
